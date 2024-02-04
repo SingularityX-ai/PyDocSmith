@@ -244,7 +244,7 @@ class GoogleParser:
                 continue
 
             # Clear Any Unknown Meta
-            # Ref: https://github.com/rr-/docstring_parser/issues/29
+            # Ref: https://github.com/SigularityX-ai/PyDocSmith/issues/29
             meta_details = meta_chunk[start:end]
             unknown_meta = re.search(r"\n\S", meta_details)
             if unknown_meta is not None:

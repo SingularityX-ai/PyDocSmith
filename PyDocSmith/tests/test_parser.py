@@ -1,7 +1,7 @@
 """Tests for generic docstring routines."""
 import pytest
-from docstring_parser.common import DocstringStyle, ParseError
-from docstring_parser.parser import parse
+from PyDocSmith.common import DocstringStyle, ParseError
+from PyDocSmith.parser import parse
 
 
 def test_rest() -> None:

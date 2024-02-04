@@ -1,5 +1,5 @@
 """Private pydoctor customization code in order to exclude the package
-docstring_parser.tests from the API documentation. Based on Twisted code.
+PyDocSmith.tests from the API documentation. Based on Twisted code.
 """
 
 # pylint: disable=invalid-name
@@ -15,8 +15,8 @@ else:
 
         def privacyClass(self, documentable: Documentable) -> PrivacyClass:
             """Report the privacy level for an object. Hide the module
-            'docstring_parser.tests'.
+            'PyDocSmith.tests'.
             """
-            if documentable.fullName().startswith("docstring_parser.tests"):
+            if documentable.fullName().startswith("PyDocSmith.tests"):
                 return PrivacyClass.HIDDEN
             return super().privacyClass(documentable)

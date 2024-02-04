@@ -1,7 +1,7 @@
 """Test for utility functions."""
 
-from docstring_parser.common import DocstringReturns
-from docstring_parser.util import combine_docstrings
+from PyDocSmith.common import DocstringReturns
+from PyDocSmith.util import combine_docstrings
 
 
 def test_combine_docstrings() -> None:

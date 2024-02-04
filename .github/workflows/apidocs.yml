@@ -23,16 +23,16 @@ jobs:
 
         # Run simple pydoctor build
         pydoctor \
-            --project-name=docstring_parser \
+            --project-name=PyDocSmith \
             --project-url=https://github.com/$GITHUB_REPOSITORY \
             --html-viewsource-base=https://github.com/$GITHUB_REPOSITORY/tree/$GITHUB_SHA \
             --make-html \
             --html-output=./apidocs \
             --project-base-dir="." \
             --docformat=restructuredtext \
-            --system-class=docstring_parser.tests._pydoctor.HidesTestsPydoctorSystem \
+            --system-class=PyDocSmith.tests._pydoctor.HidesTestsPydoctorSystem \
             --intersphinx=https://docs.python.org/3/objects.inv \
-            ./docstring_parser
+            ./PyDocSmith
 
     - name: Push API documentation to Github Pages
       uses: peaceiris/actions-gh-pages@v3

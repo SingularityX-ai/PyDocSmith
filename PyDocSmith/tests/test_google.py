@@ -1,8 +1,120 @@
-"""Tests for numpydoc-style docstring routines."""
+"""Tests for Google-style docstring routines."""
 import typing as T
 
 import pytest
-from docstring_parser.numpydoc import compose, parse
+from PyDocSmith.common import ParseError, RenderingStyle
+from PyDocSmith.google import (
+    GoogleParser,
+    Section,
+    SectionType,
+    compose,
+    parse,
+)
+
+
+def test_google_parser_unknown_section() -> None:
+    """Test parsing an unknown section with default GoogleParser
+    configuration.
+    """
+    parser = GoogleParser()
+    docstring = parser.parse(
+        """
+        Unknown:
+            spam: a
+        """
+    )
+    assert docstring.short_description == "Unknown:"
+    assert docstring.long_description == "spam: a"
+    assert len(docstring.meta) == 0
+
+
+def test_google_parser_custom_sections() -> None:
+    """Test parsing an unknown section with custom GoogleParser
+    configuration.
+    """
+    parser = GoogleParser(
+        [
+            Section("DESCRIPTION", "desc", SectionType.SINGULAR),
+            Section("ARGUMENTS", "param", SectionType.MULTIPLE),
+            Section("ATTRIBUTES", "attribute", SectionType.MULTIPLE),
+            Section("EXAMPLES", "examples", SectionType.SINGULAR),
+        ],
+        title_colon=False,
+    )
+    docstring = parser.parse(
+        """
+        DESCRIPTION
+            This is the description.
+
+        ARGUMENTS
+            arg1: first arg
+            arg2: second arg
+
+        ATTRIBUTES
+            attr1: first attribute
+            attr2: second attribute
+
+        EXAMPLES
+            Many examples
+            More examples
+        """
+    )
+
+    assert docstring.short_description is None
+    assert docstring.long_description is None
+    assert len(docstring.meta) == 6
+    assert docstring.meta[0].args == ["desc"]
+    assert docstring.meta[0].description == "This is the description."
+    assert docstring.meta[1].args == ["param", "arg1"]
+    assert docstring.meta[1].description == "first arg"
+    assert docstring.meta[2].args == ["param", "arg2"]
+    assert docstring.meta[2].description == "second arg"
+    assert docstring.meta[3].args == ["attribute", "attr1"]
+    assert docstring.meta[3].description == "first attribute"
+    assert docstring.meta[4].args == ["attribute", "attr2"]
+    assert docstring.meta[4].description == "second attribute"
+    assert docstring.meta[5].args == ["examples"]
+    assert docstring.meta[5].description == "Many examples\nMore examples"
+
+
+def test_google_parser_custom_sections_after() -> None:
+    """Test parsing an unknown section with custom GoogleParser configuration
+    that was set at a runtime.
+    """
+    parser = GoogleParser(title_colon=False)
+    parser.add_section(Section("Note", "note", SectionType.SINGULAR))
+    docstring = parser.parse(
+        """
+        short description
+
+        Note:
+            a note
+        """
+    )
+    assert docstring.short_description == "short description"
+    assert docstring.long_description == "Note:\n    a note"
+
+    docstring = parser.parse(
+        """
+        short description
+
+        Note a note
+        """
+    )
+    assert docstring.short_description == "short description"
+    assert docstring.long_description == "Note a note"
+
+    docstring = parser.parse(
+        """
+        short description
+
+        Note
+            a note
+        """
+    )
+    assert len(docstring.meta) == 1
+    assert docstring.meta[0].args == ["note"]
+    assert docstring.meta[0].description == "a note"
 
 
 @pytest.mark.parametrize(
@@ -107,9 +219,8 @@ def test_long_description(
         (
             """
             Short description
-            Parameters
-            ----------
-            asd
+            Args:
+                asd:
             """,
             "Short description",
             None,
@@ -120,9 +231,8 @@ def test_long_description(
             """
             Short description
             Long description
-            Parameters
-            ----------
-            asd
+            Args:
+                asd:
             """,
             "Short description",
             "Long description",
@@ -134,9 +244,8 @@ def test_long_description(
             Short description
             First line
                 Second line
-            Parameters
-            ----------
-            asd
+            Args:
+                asd:
             """,
             "Short description",
             "First line\n    Second line",
@@ -149,9 +258,8 @@ def test_long_description(
 
             First line
                 Second line
-            Parameters
-            ----------
-            asd
+            Args:
+                asd:
             """,
             "Short description",
             "First line\n    Second line",
@@ -165,9 +273,8 @@ def test_long_description(
             First line
                 Second line
 
-            Parameters
-            ----------
-            asd
+            Args:
+                asd:
             """,
             "Short description",
             "First line\n    Second line",
@@ -176,9 +283,8 @@ def test_long_description(
         ),
         (
             """
-            Parameters
-            ----------
-            asd
+            Args:
+                asd:
             """,
             None,
             None,
@@ -209,13 +315,11 @@ def test_meta_with_multiline_description() -> None:
         """
         Short description
 
-        Parameters
-        ----------
-        spam
-            asd
-            1
-                2
-            3
+        Args:
+            spam: asd
+                1
+                    2
+                3
         """
     )
     assert docstring.short_description == "Short description"
@@ -225,92 +329,33 @@ def test_meta_with_multiline_description() -> None:
     assert docstring.meta[0].description == "asd\n1\n    2\n3"
 
 
-@pytest.mark.parametrize(
-    "source, expected_is_optional, expected_type_name, expected_default",
-    [
-        (
-            """
-                Parameters
-                ----------
-                arg1 : int
-                    The first arg
-                """,
-            False,
-            "int",
-            None,
-        ),
-        (
-            """
-                Parameters
-                ----------
-                arg2 : str
-                    The second arg
-                """,
-            False,
-            "str",
-            None,
-        ),
-        (
-            """
-                Parameters
-                ----------
-                arg3 : float, optional
-                    The third arg. Default is 1.0.
-                """,
-            True,
-            "float",
-            "1.0",
-        ),
-        (
-            """
-                Parameters
-                ----------
-                arg4 : Optional[Dict[str, Any]], optional
-                    The fourth arg. Defaults to None
-                """,
-            True,
-            "Optional[Dict[str, Any]]",
-            "None",
-        ),
-        (
-            """
-                Parameters
-                ----------
-                arg5 : str, optional
-                    The fifth arg. Default: DEFAULT_ARGS
-                """,
-            True,
-            "str",
-            "DEFAULT_ARGS",
-        ),
-        (
-            """
-                Parameters
-                ----------
-                parameter_without_default : int
-                    The parameter_without_default is required.
-                """,
-            False,
-            "int",
-            None,
-        ),
-    ],
-)
-def test_default_args(
-    source: str,
-    expected_is_optional: bool,
-    expected_type_name: T.Optional[str],
-    expected_default: T.Optional[str],
-) -> None:
+def test_default_args() -> None:
     """Test parsing default arguments."""
-    docstring = parse(source)
-    assert docstring is not None
-    assert len(docstring.params) == 1
+    docstring = parse(
+        """A sample function
 
-    arg1 = docstring.params[0]
-    assert arg1.is_optional == expected_is_optional
-    assert arg1.type_name == expected_type_name
-    assert arg1.default == expected_default
+A function the demonstrates docstrings
+
+Args:
+    arg1 (int): The firsty arg
+    arg2 (str): The second arg
+    arg3 (float, optional): The third arg. Defaults to 1.0.
+    arg4 (Optional[Dict[str, Any]], optional): The last arg. Defaults to None.
+    arg5 (str, optional): The fifth arg. Defaults to DEFAULT_ARG5.
+
+Returns:
+    Mapping[str, Any]: The args packed in a mapping
+"""
+    )
+    assert docstring is not None
+    assert len(docstring.params) == 5
+
+    arg4 = docstring.params[3]
+    assert arg4.arg_name == "arg4"
+    assert arg4.is_optional
+    assert arg4.type_name == "Optional[Dict[str, Any]]"
+    assert arg4.default == "None"
+    assert arg4.description == "The last arg. Defaults to None."
 
 
 def test_multiple_meta() -> None:
@@ -319,20 +364,15 @@ def test_multiple_meta() -> None:
         """
         Short description
 
-        Parameters
-        ----------
-        spam
-            asd
-            1
-                2
-            3
+        Args:
+            spam: asd
+                1
+                    2
+                3
 
-        Raises
-        ------
-        bla
-            herp
-        yay
-            derp
+        Raises:
+            bla: herp
+            yay: derp
         """
     )
     assert docstring.short_description == "Short description"
@@ -357,16 +397,11 @@ def test_params() -> None:
         """
         Short description
 
-        Parameters
-        ----------
-        name
-            description 1
-        priority : int
-            description 2
-        sender : str, optional
-            description 3
-        ratio : Optional[float], optional
-            description 4
+        Args:
+            name: description 1
+            priority (int): description 2
+            sender (str?): description 3
+            ratio (Optional[float], optional): description 4
         """
     )
     assert len(docstring.params) == 4
@@ -391,13 +426,10 @@ def test_params() -> None:
         """
         Short description
 
-        Parameters
-        ----------
-        name
-            description 1
-            with multi-line text
-        priority : int
-            description 2
+        Args:
+            name: description 1
+                with multi-line text
+            priority (int): description 2
         """
     )
     assert len(docstring.params) == 2
@@ -420,16 +452,11 @@ def test_attributes() -> None:
         """
         Short description
 
-        Attributes
-        ----------
-        name
-            description 1
-        priority : int
-            description 2
-        sender : str, optional
-            description 3
-        ratio : Optional[float], optional
-            description 4
+        Attributes:
+            name: description 1
+            priority (int): description 2
+            sender (str?): description 3
+            ratio (Optional[float], optional): description 4
         """
     )
     assert len(docstring.params) == 4
@@ -454,13 +481,10 @@ def test_attributes() -> None:
         """
         Short description
 
-        Attributes
-        ----------
-        name
-            description 1
-            with multi-line text
-        priority : int
-            description 2
+        Attributes:
+            name: description 1
+                with multi-line text
+            priority (int): description 2
         """
     )
     assert len(docstring.params) == 2
@@ -472,54 +496,6 @@ def test_attributes() -> None:
     assert docstring.params[1].arg_name == "priority"
     assert docstring.params[1].type_name == "int"
     assert docstring.params[1].description == "description 2"
-
-
-def test_other_params() -> None:
-    """Test parsing other parameters."""
-    docstring = parse(
-        """
-        Short description
-        Other Parameters
-        ----------------
-        only_seldom_used_keywords : type, optional
-            Explanation
-        common_parameters_listed_above : type, optional
-            Explanation
-        """
-    )
-    assert len(docstring.meta) == 2
-    assert docstring.meta[0].args == [
-        "other_param",
-        "only_seldom_used_keywords",
-    ]
-    assert docstring.meta[0].arg_name == "only_seldom_used_keywords"
-    assert docstring.meta[0].type_name == "type"
-    assert docstring.meta[0].is_optional
-    assert docstring.meta[0].description == "Explanation"
-
-    assert docstring.meta[1].args == [
-        "other_param",
-        "common_parameters_listed_above",
-    ]
-
-
-def test_yields() -> None:
-    """Test parsing yields."""
-    docstring = parse(
-        """
-        Short description
-        Yields
-        ------
-        int
-            description
-        """
-    )
-    assert len(docstring.meta) == 1
-    assert docstring.meta[0].args == ["yields"]
-    assert docstring.meta[0].type_name == "int"
-    assert docstring.meta[0].description == "description"
-    assert docstring.meta[0].return_name is None
-    assert docstring.meta[0].is_generator
 
 
 def test_returns() -> None:
@@ -536,14 +512,13 @@ def test_returns() -> None:
     docstring = parse(
         """
         Short description
-        Returns
-        -------
-        type
+        Returns:
+            description
         """
     )
     assert docstring.returns is not None
-    assert docstring.returns.type_name == "type"
-    assert docstring.returns.description is None
+    assert docstring.returns.type_name is None
+    assert docstring.returns.description == "description"
     assert docstring.many_returns is not None
     assert len(docstring.many_returns) == 1
     assert docstring.many_returns[0] == docstring.returns
@@ -551,10 +526,22 @@ def test_returns() -> None:
     docstring = parse(
         """
         Short description
-        Returns
-        -------
-        int
-            description
+        Returns:
+            description with: a colon!
+        """
+    )
+    assert docstring.returns is not None
+    assert docstring.returns.type_name is None
+    assert docstring.returns.description == "description with: a colon!"
+    assert docstring.many_returns is not None
+    assert len(docstring.many_returns) == 1
+    assert docstring.many_returns[0] == docstring.returns
+
+    docstring = parse(
+        """
+        Short description
+        Returns:
+            int: description
         """
     )
     assert docstring.returns is not None
@@ -566,10 +553,8 @@ def test_returns() -> None:
 
     docstring = parse(
         """
-        Returns
-        -------
-        Optional[Mapping[str, List[int]]]
-            A description: with a colon
+        Returns:
+            Optional[Mapping[str, List[int]]]: A description: with a colon
         """
     )
     assert docstring.returns is not None
@@ -582,10 +567,22 @@ def test_returns() -> None:
     docstring = parse(
         """
         Short description
-        Returns
-        -------
-        int
-            description
+        Yields:
+            int: description
+        """
+    )
+    assert docstring.returns is not None
+    assert docstring.returns.type_name == "int"
+    assert docstring.returns.description == "description"
+    assert docstring.many_returns is not None
+    assert len(docstring.many_returns) == 1
+    assert docstring.many_returns[0] == docstring.returns
+
+    docstring = parse(
+        """
+        Short description
+        Returns:
+            int: description
             with much text
 
             even some spacing
@@ -600,29 +597,6 @@ def test_returns() -> None:
     assert len(docstring.many_returns) == 1
     assert docstring.many_returns[0] == docstring.returns
 
-    docstring = parse(
-        """
-        Short description
-        Returns
-        -------
-        a : int
-            description for a
-        b : str
-            description for b
-        """
-    )
-    assert docstring.returns is not None
-    assert docstring.returns.type_name == "int"
-    assert docstring.returns.description == ("description for a")
-    assert docstring.many_returns is not None
-    assert len(docstring.many_returns) == 2
-    assert docstring.many_returns[0].type_name == "int"
-    assert docstring.many_returns[0].description == "description for a"
-    assert docstring.many_returns[0].return_name == "a"
-    assert docstring.many_returns[1].type_name == "str"
-    assert docstring.many_returns[1].description == "description for b"
-    assert docstring.many_returns[1].return_name == "b"
-
 
 def test_raises() -> None:
     """Test parsing raises."""
@@ -636,10 +610,8 @@ def test_raises() -> None:
     docstring = parse(
         """
         Short description
-        Raises
-        ------
-        ValueError
-            description
+        Raises:
+            ValueError: description
         """
     )
     assert len(docstring.raises) == 1
@@ -647,182 +619,86 @@ def test_raises() -> None:
     assert docstring.raises[0].description == "description"
 
 
-def test_warns() -> None:
-    """Test parsing warns."""
-    docstring = parse(
-        """
-        Short description
-        Warns
-        -----
-        UserWarning
-            description
-        """
-    )
-    assert len(docstring.meta) == 1
-    assert docstring.meta[0].type_name == "UserWarning"
-    assert docstring.meta[0].description == "description"
-
-
-def test_simple_sections() -> None:
-    """Test parsing simple sections."""
-    docstring = parse(
-        """
-        Short description
-
-        See Also
-        --------
-        something : some thing you can also see
-        actually, anything can go in this section
-
-        Warnings
-        --------
-        Here be dragons
-
-        Notes
-        -----
-        None of this is real
-
-        References
-        ----------
-        Cite the relevant literature, e.g. [1]_.  You may also cite these
-        references in the notes section above.
-
-        .. [1] O. McNoleg, "The integration of GIS, remote sensing,
-           expert systems and adaptive co-kriging for environmental habitat
-           modelling of the Highland Haggis using object-oriented, fuzzy-logic
-           and neural-network techniques," Computers & Geosciences, vol. 22,
-           pp. 585-588, 1996.
-        """
-    )
-    assert len(docstring.meta) == 4
-    assert docstring.meta[0].args == ["see_also"]
-    assert docstring.meta[0].description == (
-        "something : some thing you can also see\n"
-        "actually, anything can go in this section"
-    )
-
-    assert docstring.meta[1].args == ["warnings"]
-    assert docstring.meta[1].description == "Here be dragons"
-
-    assert docstring.meta[2].args == ["notes"]
-    assert docstring.meta[2].description == "None of this is real"
-
-    assert docstring.meta[3].args == ["references"]
-
-
-@pytest.mark.parametrize(
-    "source, expected_results",
-    [
-        (
-            "Description\nExamples\n--------\nlong example\n\nmore here",
-            [
-                (None, "long example\n\nmore here"),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n>>> test",
-            [
-                (">>> test", ""),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n>>> testa\n>>> testb",
-            [
-                (">>> testa\n>>> testb", ""),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n>>> test1\ndesc1",
-            [
-                (">>> test1", "desc1"),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n"
-            ">>> test1a\n>>> test1b\ndesc1a\ndesc1b",
-            [
-                (">>> test1a\n>>> test1b", "desc1a\ndesc1b"),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n"
-            ">>> test1\ndesc1\n>>> test2\ndesc2",
-            [
-                (">>> test1", "desc1"),
-                (">>> test2", "desc2"),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n"
-            ">>> test1a\n>>> test1b\ndesc1a\ndesc1b\n"
-            ">>> test2a\n>>> test2b\ndesc2a\ndesc2b\n",
-            [
-                (">>> test1a\n>>> test1b", "desc1a\ndesc1b"),
-                (">>> test2a\n>>> test2b", "desc2a\ndesc2b"),
-            ],
-        ),
-        (
-            "Description\nExamples\n--------\n"
-            "    >>> test1a\n    >>> test1b\n    desc1a\n    desc1b\n"
-            "    >>> test2a\n    >>> test2b\n    desc2a\n    desc2b\n",
-            [
-                (">>> test1a\n>>> test1b", "desc1a\ndesc1b"),
-                (">>> test2a\n>>> test2b", "desc2a\ndesc2b"),
-            ],
-        ),
-    ],
-)
-def test_examples(
-    source, expected_results: T.List[T.Tuple[T.Optional[str], str]]
-) -> None:
+def test_examples() -> None:
     """Test parsing examples."""
-    docstring = parse(source)
-    assert len(docstring.meta) == len(expected_results)
-    for meta, expected_result in zip(docstring.meta, expected_results):
-        assert meta.description == expected_result[1]
-    assert len(docstring.examples) == len(expected_results)
-    for example, expected_result in zip(docstring.examples, expected_results):
-        assert example.snippet == expected_result[0]
-        assert example.description == expected_result[1]
+    docstring = parse(
+        """
+        Short description
+        Example:
+            example: 1
+        Examples:
+            long example
+
+            more here
+        """
+    )
+    assert len(docstring.examples) == 2
+    assert docstring.examples[0].description == "example: 1"
+    assert docstring.examples[1].description == "long example\n\nmore here"
 
 
-@pytest.mark.parametrize(
-    "source, expected_depr_version, expected_depr_desc",
-    [
-        (
-            "Short description\n\n.. deprecated:: 1.6.0\n    This is busted!",
-            "1.6.0",
-            "This is busted!",
-        ),
-        (
-            (
-                "Short description\n\n"
-                ".. deprecated:: 1.6.0\n"
-                "    This description has\n"
-                "    multiple lines!"
-            ),
-            "1.6.0",
-            "This description has\nmultiple lines!",
-        ),
-        ("Short description\n\n.. deprecated:: 1.6.0", "1.6.0", None),
-        (
-            "Short description\n\n.. deprecated::\n    No version!",
-            None,
-            "No version!",
-        ),
-    ],
-)
-def test_deprecation(
-    source: str,
-    expected_depr_version: T.Optional[str],
-    expected_depr_desc: T.Optional[str],
-) -> None:
-    """Test parsing deprecation notes."""
-    docstring = parse(source)
+def test_broken_meta() -> None:
+    """Test parsing broken meta."""
+    with pytest.raises(ParseError):
+        parse("Args:")
 
-    assert docstring.deprecation is not None
-    assert docstring.deprecation.version == expected_depr_version
-    assert docstring.deprecation.description == expected_depr_desc
+    with pytest.raises(ParseError):
+        parse("Args:\n    herp derp")
+
+
+def test_unknown_meta() -> None:
+    """Test parsing unknown meta."""
+    docstring = parse(
+        """Short desc
+
+        Unknown 0:
+            title0: content0
+
+        Args:
+            arg0: desc0
+            arg1: desc1
+
+        Unknown1:
+            title1: content1
+
+        Unknown2:
+            title2: content2
+        """
+    )
+
+    assert docstring.params[0].arg_name == "arg0"
+    assert docstring.params[0].description == "desc0"
+    assert docstring.params[1].arg_name == "arg1"
+    assert docstring.params[1].description == "desc1"
+
+
+def test_broken_arguments() -> None:
+    """Test parsing broken arguments."""
+    with pytest.raises(ParseError):
+        parse(
+            """This is a test
+
+            Args:
+                param - poorly formatted
+            """
+        )
+
+
+def test_empty_example() -> None:
+    """Test parsing empty examples section."""
+    docstring = parse(
+        """Short description
+
+        Example:
+
+        Raises:
+            IOError: some error
+        """
+    )
+
+    assert len(docstring.examples) == 1
+    assert docstring.examples[0].args == ["examples"]
+    assert docstring.examples[0].description == ""
 
 
 @pytest.mark.parametrize(
@@ -881,24 +757,18 @@ def test_deprecation(
             """
             Short description
             Meta:
-            -----
                 asd
             """,
-            "Short description\nMeta:\n-----\n    asd",
+            "Short description\nMeta:\n    asd",
         ),
         (
             """
             Short description
             Long description
             Meta:
-            -----
                 asd
             """,
-            "Short description\n"
-            "Long description\n"
-            "Meta:\n"
-            "-----\n"
-            "    asd",
+            "Short description\nLong description\nMeta:\n    asd",
         ),
         (
             """
@@ -906,14 +776,12 @@ def test_deprecation(
             First line
                 Second line
             Meta:
-            -----
                 asd
             """,
             "Short description\n"
             "First line\n"
             "    Second line\n"
             "Meta:\n"
-            "-----\n"
             "    asd",
         ),
         (
@@ -923,7 +791,6 @@ def test_deprecation(
             First line
                 Second line
             Meta:
-            -----
                 asd
             """,
             "Short description\n"
@@ -931,7 +798,6 @@ def test_deprecation(
             "First line\n"
             "    Second line\n"
             "Meta:\n"
-            "-----\n"
             "    asd",
         ),
         (
@@ -942,7 +808,6 @@ def test_deprecation(
                 Second line
 
             Meta:
-            -----
                 asd
             """,
             "Short description\n"
@@ -951,7 +816,6 @@ def test_deprecation(
             "    Second line\n"
             "\n"
             "Meta:\n"
-            "-----\n"
             "    asd",
         ),
         (
@@ -959,7 +823,6 @@ def test_deprecation(
             Short description
 
             Meta:
-            -----
                 asd
                     1
                         2
@@ -968,7 +831,6 @@ def test_deprecation(
             "Short description\n"
             "\n"
             "Meta:\n"
-            "-----\n"
             "    asd\n"
             "        1\n"
             "            2\n"
@@ -979,109 +841,137 @@ def test_deprecation(
             Short description
 
             Meta1:
-            ------
                 asd
                 1
                     2
                 3
             Meta2:
-            ------
                 herp
             Meta3:
-            ------
                 derp
             """,
             "Short description\n"
             "\n"
             "Meta1:\n"
-            "------\n"
             "    asd\n"
             "    1\n"
             "        2\n"
             "    3\n"
             "Meta2:\n"
-            "------\n"
             "    herp\n"
             "Meta3:\n"
-            "------\n"
             "    derp",
         ),
         (
             """
             Short description
 
-            Parameters:
-            -----------
-                name
-                    description 1
-                priority: int
-                    description 2
-                sender: str, optional
-                    description 3
-                message: str, optional
-                    description 4, defaults to 'hello'
-                multiline: str, optional
+            Args:
+                name: description 1
+                priority (int): description 2
+                sender (str, optional): description 3
+                message (str, optional): description 4, defaults to 'hello'
+                multiline (str?):
                     long description 5,
                         defaults to 'bye'
             """,
             "Short description\n"
             "\n"
-            "Parameters:\n"
-            "-----------\n"
-            "    name\n"
-            "        description 1\n"
-            "    priority: int\n"
-            "        description 2\n"
-            "    sender: str, optional\n"
-            "        description 3\n"
-            "    message: str, optional\n"
-            "        description 4, defaults to 'hello'\n"
-            "    multiline: str, optional\n"
-            "        long description 5,\n"
-            "            defaults to 'bye'",
+            "Args:\n"
+            "    name: description 1\n"
+            "    priority (int): description 2\n"
+            "    sender (str?): description 3\n"
+            "    message (str?): description 4, defaults to 'hello'\n"
+            "    multiline (str?): long description 5,\n"
+            "        defaults to 'bye'",
         ),
         (
             """
             Short description
             Raises:
-            -------
-                ValueError
-                    description
+                ValueError: description
             """,
-            "Short description\n"
-            "Raises:\n"
-            "-------\n"
-            "    ValueError\n"
-            "        description",
-        ),
-        (
-            """
-            Description
-            Examples:
-            --------
-            >>> test1a
-            >>> test1b
-            desc1a
-            desc1b
-            >>> test2a
-            >>> test2b
-            desc2a
-            desc2b
-            """,
-            "Description\n"
-            "Examples:\n"
-            "--------\n"
-            ">>> test1a\n"
-            ">>> test1b\n"
-            "desc1a\n"
-            "desc1b\n"
-            ">>> test2a\n"
-            ">>> test2b\n"
-            "desc2a\n"
-            "desc2b",
+            "Short description\nRaises:\n    ValueError: description",
         ),
     ],
 )
 def test_compose(source: str, expected: str) -> None:
     """Test compose in default mode."""
     assert compose(parse(source)) == expected
+
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        (
+            """
+            Short description
+
+            Args:
+                name: description 1
+                priority (int): description 2
+                sender (str, optional): description 3
+                message (str, optional): description 4, defaults to 'hello'
+                multiline (str?):
+                    long description 5,
+                        defaults to 'bye'
+            """,
+            "Short description\n"
+            "\n"
+            "Args:\n"
+            "    name: description 1\n"
+            "    priority (int): description 2\n"
+            "    sender (str, optional): description 3\n"
+            "    message (str, optional): description 4, defaults to 'hello'\n"
+            "    multiline (str, optional): long description 5,\n"
+            "        defaults to 'bye'",
+        ),
+    ],
+)
+def test_compose_clean(source: str, expected: str) -> None:
+    """Test compose in clean mode."""
+    assert (
+        compose(parse(source), rendering_style=RenderingStyle.CLEAN)
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        (
+            """
+            Short description
+
+            Args:
+                name: description 1
+                priority (int): description 2
+                sender (str, optional): description 3
+                message (str, optional): description 4, defaults to 'hello'
+                multiline (str?):
+                    long description 5,
+                        defaults to 'bye'
+            """,
+            "Short description\n"
+            "\n"
+            "Args:\n"
+            "    name:\n"
+            "        description 1\n"
+            "    priority (int):\n"
+            "        description 2\n"
+            "    sender (str, optional):\n"
+            "        description 3\n"
+            "    message (str, optional):\n"
+            "        description 4, defaults to 'hello'\n"
+            "    multiline (str, optional):\n"
+            "        long description 5,\n"
+            "        defaults to 'bye'",
+        ),
+    ],
+)
+def test_compose_expanded(source: str, expected: str) -> None:
+    """Test compose in expanded mode."""
+    assert (
+        compose(parse(source), rendering_style=RenderingStyle.EXPANDED)
+        == expected
+    )

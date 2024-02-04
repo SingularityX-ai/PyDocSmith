@@ -3,9 +3,9 @@
 import inspect
 import typing as T
 
-from docstring_parser import epydoc, google, numpydoc, rest
-from docstring_parser.attrdoc import add_attribute_docstrings
-from docstring_parser.common import (
+from PyDocSmith import epydoc, google, numpydoc, rest
+from PyDocSmith.attrdoc import add_attribute_docstrings
+from PyDocSmith.common import (
     Docstring,
     DocstringStyle,
     ParseError,
