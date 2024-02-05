@@ -109,6 +109,7 @@ class GoogleParser:
             return self._build_single_meta(section, text)
 
         if ":" not in text:
+            return
             raise ParseError(f"Expected a colon in {text!r}.")
 
         # Split spec and description
@@ -282,7 +283,9 @@ class GoogleParser:
             c_splits.append((c_matches[-1].end(), len(chunk)))
             for j, (start, end) in enumerate(c_splits):
                 part = chunk[start:end].strip("\n")
-                ret.meta.append(self._build_meta(part, title))
+                content = self._build_meta(part, title)
+                if content:
+                    ret.meta.append(content)
 
         return ret
 
