@@ -256,8 +256,8 @@ class GoogleParser:
             # Ref: https://github.com/SigularityX-ai/PyDocSmith/issues/29
             meta_details = meta_chunk[start:end]
             unknown_meta = re.search(r"\n\S", meta_details)
-            if unknown_meta is not None:
-                meta_details = meta_details[: unknown_meta.start()]
+            # if unknown_meta is not None:
+            #     meta_details = meta_details[: unknown_meta.start()]
 
             chunks[title] = meta_details.strip("\n")
         if not chunks:
