@@ -101,14 +101,19 @@ class GoogleParser:
         """
 
         section = self.sections[title]
+        if text.strip() == "":
+            return
 
         if (
             section.type == SectionType.SINGULAR_OR_MULTIPLE
             and not MULTIPLE_PATTERN.match(text)
         ) or section.type == SectionType.SINGULAR:
+            if not text[0].isalnum():
+                return
             return self._build_single_meta(section, text)
 
         if ":" not in text:
+            return
             raise ParseError(f"Expected a colon in {text!r}.")
 
         # Split spec and description
@@ -119,7 +124,12 @@ class GoogleParser:
                 first_line, rest = desc.split("\n", 1)
                 desc = first_line + "\n" + inspect.cleandoc(rest)
             desc = desc.strip("\n")
-
+        
+        if before and not before[0].isalnum():
+            return
+        
+        if desc and not desc[0].isalnum():
+            return
         return self._build_multi_meta(section, before, desc)
 
     @staticmethod
@@ -283,7 +293,7 @@ class GoogleParser:
             for j, (start, end) in enumerate(c_splits):
                 part = chunk[start:end].strip("\n")
                 ret.meta.append(self._build_meta(part, title))
-
+        ret.meta = [m for m in ret.meta if m]
         return ret
 
 
