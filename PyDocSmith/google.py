@@ -114,7 +114,6 @@ class GoogleParser:
 
         if ":" not in text:
             return
-            raise ParseError(f"Expected a colon in {text!r}.")
 
         # Split spec and description
         before, desc = text.split(":", 1)
@@ -342,13 +341,17 @@ def compose(
         elif one.type_name:
             head += f"{one.type_name}{optional}:"
         else:
-            head += ":"
+            head += ""
         head = indent + head
 
         if one.description and rendering_style == RenderingStyle.EXPANDED:
             body = f"\n{indent}{indent}".join(
                 [head] + one.description.splitlines()
             )
+            parts.append(body)
+        elif one.description and not one.type_name:
+            (first, *rest) = one.description.splitlines()
+            body = f"\n{indent}{indent}".join([head + first] + rest)
             parts.append(body)
         elif one.description:
             (first, *rest) = one.description.splitlines()
