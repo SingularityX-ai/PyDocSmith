@@ -356,7 +356,7 @@ def compose(
                 [head] + one.description.splitlines()
             )
             parts.append(body)
-        elif one.description and not one.arg_name:
+        elif isinstance(one, DocstringReturns) and one.description and not one.type_name:
             (first, *rest) = one.description.splitlines()
             body = f"\n{indent}{indent}".join([head + first] + rest)
             parts.append(body)
