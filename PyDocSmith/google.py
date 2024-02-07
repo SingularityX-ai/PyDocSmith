@@ -101,6 +101,7 @@ class GoogleParser:
         """
 
         section = self.sections[title]
+        pattern = r'^[\*_a-zA-Z\d]'
         if text.strip() == "":
             return
 
@@ -108,7 +109,9 @@ class GoogleParser:
             section.type == SectionType.SINGULAR_OR_MULTIPLE
             and not MULTIPLE_PATTERN.match(text)
         ) or section.type == SectionType.SINGULAR:
-            if not text[0].isalnum():
+            text = re.sub(r'^-\s', '', text)
+            valid_start_text_for_param = re.match(pattern, text)
+            if not valid_start_text_for_param:
                 return
             return self._build_single_meta(section, text)
 
@@ -125,7 +128,7 @@ class GoogleParser:
             desc = desc.strip("\n")
         
         before = re.sub(r'^-\s', '', before)
-        pattern = r'^[\*_a-zA-Z\d]'
+        
         valid_start_text_for_param = re.match(pattern, before)
         if before and not valid_start_text_for_param:
             return

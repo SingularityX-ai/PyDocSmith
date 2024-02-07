@@ -636,6 +636,29 @@ def test_examples() -> None:
     assert docstring.examples[0].description == "example: 1"
     assert docstring.examples[1].description == "long example\n\nmore here"
 
+def test_parsing_logic() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+        """
+        Creates a task instance from its configuration.
+        Args:
+        - task_config (dict): Configuration for the task.
+        Returns:
+        - Task: Task instance created from the configuration.
+        Raises:
+        - StopIteration: If no agent with the specified role is found in the list of agents.
+        """
+    )
+    assert docstring.short_description == "Creates a task instance from its configuration."
+    assert len(docstring.params) == 1
+    assert docstring.params[0].arg_name == "task_config"
+    assert docstring.returns is not None
+    assert docstring.returns.description == "Task: Task instance created from the configuration." #TODO: Fix it,it should have arg_name
+    assert docstring.returns.arg_name == "Task" #TODO: Fix it,it should have arg_name
+    assert len(docstring.raises) == 1
+    assert docstring.raises[0].type_name == "StopIteration"
+    
+
 
 def test_broken_meta() -> None:
     """Test parsing broken meta."""
