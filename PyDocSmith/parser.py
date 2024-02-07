@@ -29,16 +29,15 @@ def detect_docstring_style(docstring) -> DocstringStyle:
     Returns:
         str: The detected style ('REST', 'GOOGLE', 'NUMPYDOC', 'EPYDOC', or 'UNKNOWN').
     """
-    if ":param" in docstring or ":return:" in docstring:
+    if "@param" in docstring or "@return" in docstring:
         return DocstringStyle.EPYDOC
-    elif "@param" in docstring or "@return" in docstring:
+    elif ":param:" in docstring or ":return:" in docstring or ":returns:" in docstring:
         return DocstringStyle.REST
     elif "Args:" in docstring or "Returns:" in docstring:
         return DocstringStyle.GOOGLE
     elif "Parameters" in docstring or "Returns" in docstring:
         return DocstringStyle.NUMPYDOC
-    else:
-        return None
+    return None
 
 
 def parse(text: str, style: DocstringStyle = DocstringStyle.AUTO) -> Docstring:
