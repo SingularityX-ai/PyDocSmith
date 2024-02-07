@@ -125,11 +125,14 @@ class GoogleParser:
             desc = desc.strip("\n")
         
         before = re.sub(r'^-\s', '', before)
-        if before and not before[0].isalnum():
+        pattern = r'^[\*_a-zA-Z\d]'
+        valid_start_text_for_param = re.match(pattern, before)
+        if before and not valid_start_text_for_param:
             return
         
         desc = re.sub(r'^-\s', '', desc)
-        if desc and not desc[0].isalnum():
+        valid_start_text_for_param = re.match(pattern, before)
+        if desc and not valid_start_text_for_param:
             return
         return self._build_multi_meta(section, before, desc)
 
@@ -342,8 +345,10 @@ def compose(
             head += f" ({one.type_name}{optional}):"
         elif one.type_name:
             head += f"{one.type_name}{optional}:"
-        else:
+        elif one.arg_name is None and one.description is not None:
             head += ""
+        else:
+            head += ":"
         head = indent + head
 
         if one.description and rendering_style == RenderingStyle.EXPANDED:
@@ -351,7 +356,7 @@ def compose(
                 [head] + one.description.splitlines()
             )
             parts.append(body)
-        elif one.description and not one.type_name:
+        elif one.description and not one.arg_name:
             (first, *rest) = one.description.splitlines()
             body = f"\n{indent}{indent}".join([head + first] + rest)
             parts.append(body)

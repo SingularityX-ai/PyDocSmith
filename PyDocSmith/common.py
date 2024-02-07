@@ -99,6 +99,7 @@ class DocstringReturns(DocstringMeta):
         self.type_name = type_name
         self.is_generator = is_generator
         self.return_name = return_name
+        self.arg_name = None
 
 
 class DocstringRaises(DocstringMeta):
