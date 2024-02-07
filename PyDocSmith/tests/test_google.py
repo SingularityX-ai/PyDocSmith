@@ -658,6 +658,27 @@ def test_parsing_logic() -> None:
     assert len(docstring.raises) == 1
     assert docstring.raises[0].type_name == "StopIteration"
     
+def test_parsing_logic_2() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+       """
+        Return a list of tools for delegating work and asking questions to co-workers.
+        This method returns a list of Tool objects, each representing a specific tool for delegating work or asking questions
+        to co-workers.
+        Returns:
+            list: A list of Tool objects, each representing a specific tool for delegating work or asking questions to
+            co-workers.
+        Raises:
+            (if applicable)
+        """
+    )
+    assert docstring.short_description == "Return a list of tools for delegating work and asking questions to co-workers."
+    assert docstring.long_description == "This method returns a list of Tool objects, each representing a specific tool for delegating work or asking questions to co-workers."
+    #todo: fix it, long_description shouldn't contain new line
+    assert len(docstring.params) == 0
+    assert docstring.returns is not None
+    assert docstring.returns.arg_name == "list" #TODO: Fix it,it should have arg_name
+    assert len(docstring.raises) == 0
 
 
 def test_broken_meta() -> None:
