@@ -57,7 +57,7 @@ def parse(text: str, style: DocstringStyle = DocstringStyle.AUTO) -> Docstring:
         try:
             return _STYLE_MAP[doc_string_style].parse(text)
         except ParseError:
-            raise ValueError(f"Failed to parse docstring with style {doc_string_style}")
+            raise ParseError(f"Failed to parse docstring with style {doc_string_style}")
 
     exc: T.Optional[Exception] = None
     rets = []

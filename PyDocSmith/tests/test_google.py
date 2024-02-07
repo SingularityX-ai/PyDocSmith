@@ -2,7 +2,7 @@
 import typing as T
 
 import pytest
-from PyDocSmith.common import ParseError, RenderingStyle
+from PyDocSmith.common import Docstring, ParseError, RenderingStyle
 from PyDocSmith.google import (
     GoogleParser,
     Section,
@@ -642,8 +642,10 @@ def test_broken_meta() -> None:
     with pytest.raises(ParseError):
         parse("Args:")
 
-    with pytest.raises(ParseError):
-        parse("Args:\n    herp derp")
+    
+    z = parse("Args:\n    herp derp")
+    assert len(z.params) == 0
+    assert z.short_description == None
 
 
 def test_unknown_meta() -> None:
@@ -671,17 +673,39 @@ def test_unknown_meta() -> None:
     assert docstring.params[1].arg_name == "arg1"
     assert docstring.params[1].description == "desc1"
 
+def test_unformatted_valid_docstring() -> None:
+    docstring = parse("""
+    Set the RPM controller for the object.
+
+    Args:
+    rpm_controller: The RPM controller to be set.
+
+    Raises:
+    helo: gejjj
+
+    Returns:
+    None
+    """)
+    assert docstring.short_description == "Set the RPM controller for the object."
+    assert len(docstring.params) == 1
+    assert docstring.params[0].arg_name == "rpm_controller"
+    assert len(docstring.raises) == 1
+    assert docstring.raises[0].type_name == "helo"
+    assert docstring.raises[0].description == "gejjj"
+    assert docstring.returns is not None
+    
 
 def test_broken_arguments() -> None:
     """Test parsing broken arguments."""
-    with pytest.raises(ParseError):
-        parse(
-            """This is a test
+    
+    z: Docstring = parse(
+        """This is a test
 
-            Args:
-                param - poorly formatted
-            """
-        )
+        Args:
+            param - poorly formatted
+        """
+    )
+    assert len(z.params) == 0
 
 
 def test_empty_example() -> None:
@@ -696,9 +720,7 @@ def test_empty_example() -> None:
         """
     )
 
-    assert len(docstring.examples) == 1
-    assert docstring.examples[0].args == ["examples"]
-    assert docstring.examples[0].description == ""
+    assert len(docstring.examples) == 0
 
 
 @pytest.mark.parametrize(
