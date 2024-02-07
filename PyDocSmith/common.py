@@ -61,6 +61,7 @@ class DocstringMeta:
         """
         self.args = args
         self.description = description
+        self.arg_name = None
 
 
 class DocstringParam(DocstringMeta):

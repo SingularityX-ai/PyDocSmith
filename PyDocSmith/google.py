@@ -348,7 +348,7 @@ def compose(
             head += f" ({one.type_name}{optional}):"
         elif one.type_name:
             head += f"{one.type_name}{optional}:"
-        elif isinstance(one, DocstringReturns) and one.arg_name is None and one.description is not None:
+        elif one.arg_name is None and one.description is not None:
             head += ""
         else:
             head += ":"
