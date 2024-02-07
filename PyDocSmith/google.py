@@ -111,7 +111,8 @@ class GoogleParser:
         ) or section.type == SectionType.SINGULAR:
             text = re.sub(r'^-\s', '', text)
             valid_start_text_for_param = re.match(pattern, text)
-            if not valid_start_text_for_param:
+            #TODO: make better comparison for Examples
+            if not (section.title == "Example" or section.title== "Examples") and not valid_start_text_for_param:
                 return
             return self._build_single_meta(section, text)
 

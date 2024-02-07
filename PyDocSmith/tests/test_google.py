@@ -680,6 +680,28 @@ def test_parsing_logic_2() -> None:
     assert docstring.returns.arg_name == "list" #TODO: Fix it,it should have arg_name
     assert len(docstring.raises) == 0
 
+def test_parsing_logic_3() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+       """
+        Useful for when you need to multiply two numbers together.
+        Args:
+        numbers (str): A comma separated list of numbers of length two, representing the two numbers you want to multiply together.
+        Returns:
+        float: The result of multiplying the two input numbers together.
+        Raises:
+        ValueError: If the input format is incorrect or if the input numbers are not valid.
+        Example:
+        >>> multiplier("2,3")
+        6
+        """
+    )
+    assert docstring.short_description == "Useful for when you need to multiply two numbers together."
+    assert len(docstring.params) == 1
+    assert docstring.returns is not None
+    assert docstring.examples is not None
+    assert docstring.examples[0].description == ">>> multiplier(\"2,3\")\n6"
+
 
 def test_broken_meta() -> None:
     """Test parsing broken meta."""
