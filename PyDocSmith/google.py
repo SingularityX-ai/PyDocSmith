@@ -124,9 +124,11 @@ class GoogleParser:
                 desc = first_line + "\n" + inspect.cleandoc(rest)
             desc = desc.strip("\n")
         
+        before = re.sub(r'^-\s', '', before)
         if before and not before[0].isalnum():
             return
         
+        desc = re.sub(r'^-\s', '', desc)
         if desc and not desc[0].isalnum():
             return
         return self._build_multi_meta(section, before, desc)
