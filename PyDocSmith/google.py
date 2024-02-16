@@ -114,12 +114,14 @@ class GoogleParser:
             and not MULTIPLE_PATTERN.match(text)
         ) or section.type == SectionType.SINGULAR:
             text = re.sub(r'^-\s', '', text)
+            #to validate if the text starts with a valid character in the function signature
             valid_start_text_for_param = re.match(pattern, text)
+
             #TODO: make better comparison for Examples
-            if not (section.title == "Example" or section.title== "Examples") and not valid_start_text_for_param:
-                return
-            if not (section.title == "Note" or section.title== "Notes") and not valid_start_text_for_param:
-                return
+            if not valid_start_text_for_param:
+                ignore_for_these_type = ["Example", "Examples", "Note", "Notes"]
+                if not section.title in ignore_for_these_type:
+                    return
             return self._build_single_meta(section, text)
 
         if ":" not in text:
@@ -378,8 +380,13 @@ def compose(
             parts.append(body)
         elif isinstance(one, DocstringReturns) and one.description and not one.type_name:
             (first, *rest) = one.description.splitlines()
-            body = f"\n{indent}{indent}".join([head + first] + rest)
-            parts.append(body)
+            if rendering_style == RenderingStyle.COMPACT and first == "None":
+                index_of_returns = parts.index("Returns:")
+                parts.pop(index_of_returns)
+                pass
+            else:
+                body = f"\n{indent}{indent}".join([head + first] + rest)
+                parts.append(body)
         elif one.description:
             (first, *rest) = one.description.splitlines()
             body = f"\n{indent}{indent}".join([head + " " + first] + rest)
