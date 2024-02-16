@@ -2,7 +2,8 @@
 import typing as T
 
 import pytest
-from PyDocSmith.common import Docstring, ParseError, RenderingStyle
+from PyDocSmith.common import Docstring, DocstringStyle, ParseError, RenderingStyle
+from PyDocSmith import compose as compose_common
 from PyDocSmith.google import (
     GoogleParser,
     Section,

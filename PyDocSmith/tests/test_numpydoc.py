@@ -410,6 +410,58 @@ def test_params() -> None:
     assert docstring.params[1].type_name == "int"
     assert docstring.params[1].description == "description 2"
 
+def test_notes() -> None:
+    """Test parsing params."""
+    docstring = parse("Short description")
+    assert len(docstring.params) == 0
+
+    docstring = parse(
+        """
+        Initialize the model with provided parameters.
+
+        Parameters
+        ----------
+        model_path : Optional[str]
+            Path to the model. Defaults to None.
+        engine_name : Optional[str]
+            Name of the engine. Defaults to None.
+        tokenizer_dir : Optional[str]
+            Directory for the tokenizer. Defaults to None.
+        temperature : float
+            Temperature for token generation. Defaults to 0.1.
+        max_new_tokens : int
+            Maximum number of new tokens. Defaults to DEFAULT_NUM_OUTPUTS.
+        context_window : int
+            Context window size. Defaults to DEFAULT_CONTEXT_WINDOW.
+        messages_to_prompt : Optional[Callable]
+            Function for prompting messages. Defaults to None.
+        completion_to_prompt : Optional[Callable]
+            Function for prompting completions. Defaults to None.
+        callback_manager : Optional[CallbackManager]
+            Manager for callbacks. Defaults to None.
+        generate_kwargs : Optional[Dict[str, Any]]
+            Additional keyword arguments for generation. Defaults to None.
+        model_kwargs : Optional[Dict[str, Any]]
+            Additional keyword arguments for the model. Defaults to None.
+        verbose : bool
+            Verbosity flag. Defaults to False.
+
+        Raises
+        ----------
+        ValueError
+            If the provided model path does not exist.
+
+        Notes
+        ----------
+            This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding.
+        """
+    )
+    assert docstring.short_description == "Initialize the model with provided parameters."
+    assert len(docstring.params) == 12
+    assert docstring.returns is None
+    assert docstring.notes is not None
+    print(compose(docstring))
+    # assert docstring.notes[0].description == "This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding."
 
 def test_attributes() -> None:
     """Test parsing attributes."""
@@ -694,6 +746,19 @@ def test_simple_sections() -> None:
            pp. 585-588, 1996.
         """
     )
+    docstring = parse("""
+            Description
+            Examples:
+            --------
+            >>> test1a
+            >>> test1b
+            desc1a
+            desc1b
+            >>> test2a
+            >>> test2b
+            desc2a
+            desc2b
+            """)
     assert len(docstring.meta) == 4
     assert docstring.meta[0].args == ["see_also"]
     assert docstring.meta[0].description == (
@@ -1082,6 +1147,8 @@ def test_deprecation(
         ),
     ],
 )
+
 def test_compose(source: str, expected: str) -> None:
     """Test compose in default mode."""
-    assert compose(parse(source)) == expected
+    parsed = parse(source)
+    assert compose(parse) == expected
