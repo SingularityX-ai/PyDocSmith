@@ -119,7 +119,7 @@ class GoogleParser:
 
             #TODO: make better comparison for Examples
             if not valid_start_text_for_param:
-                ignore_for_these_type = ["Example", "Examples", "Note", "Notes"]
+                ignore_for_these_type = ["Example", "Examples", "Note", "Notes", "Returns", "Yields"]
                 if not section.title in ignore_for_these_type:
                     return
             return self._build_single_meta(section, text)
