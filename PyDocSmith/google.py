@@ -293,7 +293,6 @@ class GoogleParser:
             # Check for singular elements
             if self.sections[title].type in [
                 SectionType.SINGULAR,
-                SectionType.SINGULAR_OR_MULTIPLE,
             ]:
                 part = inspect.cleandoc(chunk)
                 ret.meta.append(self._build_meta(part, title))
@@ -302,6 +301,13 @@ class GoogleParser:
             # Split based on lines which have exactly that indent
             _re = "^" + indent + r"(?=\S)"
             c_matches = list(re.finditer(_re, chunk, flags=re.M))
+            if self.sections[title].type in [
+                SectionType.SINGULAR_OR_MULTIPLE,
+            ]:
+                if not c_matches:
+                    ret.meta.append(self._build_meta(part, title))
+                    continue
+          
             if not c_matches:
                 raise ParseError(f'No specification for "{title}": "{chunk}"')
             c_splits = []

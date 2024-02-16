@@ -335,18 +335,18 @@ def test_default_args() -> None:
     docstring = parse(
         """A sample function
 
-A function the demonstrates docstrings
+        A function the demonstrates docstrings
 
-Args:
-    arg1 (int): The firsty arg
-    arg2 (str): The second arg
-    arg3 (float, optional): The third arg. Defaults to 1.0.
-    arg4 (Optional[Dict[str, Any]], optional): The last arg. Defaults to None.
-    arg5 (str, optional): The fifth arg. Defaults to DEFAULT_ARG5.
+        Args:
+            arg1 (int): The firsty arg
+            arg2 (str): The second arg
+            arg3 (float, optional): The third arg. Defaults to 1.0.
+            arg4 (Optional[Dict[str, Any]], optional): The last arg. Defaults to None.
+            arg5 (str, optional): The fifth arg. Defaults to DEFAULT_ARG5.
 
-Returns:
-    Mapping[str, Any]: The args packed in a mapping
-"""
+        Returns:
+            Mapping[str, Any]: The args packed in a mapping
+        """
     )
     assert docstring is not None
     assert len(docstring.params) == 5
@@ -736,6 +736,66 @@ def test_notes() -> None:
     assert docstring.notes is not None
     assert docstring.notes[0].description == "This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding."
 
+def test_multiple_returns() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+        """A sample function
+
+        A function the demonstrates docstrings
+
+        Args:
+            arg1 (int): The firsty arg
+            arg2 (str): The second arg
+            arg3 (float, optional): The third arg. Defaults to 1.0.
+            arg4 (Optional[Dict[str, Any]], optional): The last arg. Defaults to None.
+            arg5 (str, optional): The fifth arg. Defaults to DEFAULT_ARG5.
+
+        Returns:
+            arg1 (Optional[Dict[str, Any]], optional): The args packed in a mapping
+            arg2 (float, optional): The second arg
+        """
+    )
+    assert docstring is not None
+    assert len(docstring.params) == 5
+
+    arg4 = docstring.params[3]
+    assert arg4.arg_name == "arg4"
+    assert arg4.is_optional
+    assert arg4.type_name == "Optional[Dict[str, Any]]"
+    assert arg4.default == "None"
+    assert arg4.description == "The last arg. Defaults to None."
+    assert docstring.many_returns is not None
+
+def test_single_returns() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+        """A sample function
+
+        A function the demonstrates docstrings
+
+        Args:
+            arg1 (int): The firsty arg
+            arg2 (str): The second arg
+            arg3 (float, optional): The third arg. Defaults to 1.0.
+            arg4 (Optional[Dict[str, Any]], optional): The last arg. Defaults to None.
+            arg5 (str, optional): The fifth arg. Defaults to DEFAULT_ARG5.
+
+        Returns:
+            The args packed in a mapping
+        """
+    )
+    assert docstring is not None
+    assert len(docstring.params) == 5
+    print(compose(docstring))
+
+    arg4 = docstring.params[3]
+    assert arg4.arg_name == "arg4"
+    assert arg4.is_optional
+    assert arg4.type_name == "Optional[Dict[str, Any]]"
+    assert arg4.default == "None"
+    assert arg4.description == "The last arg. Defaults to None."
+    assert docstring.many_returns is not None
+    
 
 def test_broken_meta() -> None:
     """Test parsing broken meta."""
