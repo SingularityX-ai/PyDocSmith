@@ -10,12 +10,14 @@ PARAM_KEYWORDS = {
     "attribute",
     "key",
     "keyword",
+    "note"
 }
 RAISES_KEYWORDS = {"raises", "raise", "except", "exception"}
 DEPRECATION_KEYWORDS = {"deprecation", "deprecated"}
 RETURNS_KEYWORDS = {"return", "returns"}
 YIELDS_KEYWORDS = {"yield", "yields"}
 EXAMPLES_KEYWORDS = {"example", "examples"}
+NOTES_KEYWORDS = {"note", "notes"}
 
 
 class ParseError(RuntimeError):
@@ -147,6 +149,19 @@ class DocstringExample(DocstringMeta):
         self.snippet = snippet
         self.description = description
 
+class DocstringNote(DocstringMeta):
+    """DocstringNote symbolizing example metadata."""
+
+    def __init__(
+        self,
+        args: T.List[str],
+        snippet: T.Optional[str],
+        description: T.Optional[str],
+    ) -> None:
+        """Initialize self."""
+        super().__init__(args, description)
+        self.snippet = snippet
+        self.description = description
 
 class Docstring:
     """Docstring object representation."""
@@ -208,4 +223,11 @@ class Docstring:
         """Return a list of information on function examples."""
         return [
             item for item in self.meta if isinstance(item, DocstringExample)
+        ]
+    
+    @property
+    def notes(self) -> T.List[DocstringNote]:
+        """Return a list of information on function notes."""
+        return [
+            item for item in self.meta if isinstance(item, DocstringNote)
         ]

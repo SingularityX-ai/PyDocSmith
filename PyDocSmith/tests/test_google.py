@@ -702,6 +702,39 @@ def test_parsing_logic_3() -> None:
     assert docstring.examples is not None
     assert docstring.examples[0].description == ">>> multiplier(\"2,3\")\n6"
 
+def test_notes() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+       """
+        Initialize the model with provided parameters.
+
+        Args:
+        model_path (Optional[str]): Path to the model. Defaults to None.
+        engine_name (Optional[str]): Name of the engine. Defaults to None.
+        tokenizer_dir (Optional[str]): Directory for the tokenizer. Defaults to None.
+        temperature (float): Temperature for token generation. Defaults to 0.1.
+        max_new_tokens (int): Maximum number of new tokens. Defaults to DEFAULT_NUM_OUTPUTS.
+        context_window (int): Context window size. Defaults to DEFAULT_CONTEXT_WINDOW.
+        messages_to_prompt (Optional[Callable]): Function for prompting messages. Defaults to None.
+        completion_to_prompt (Optional[Callable]): Function for prompting completions. Defaults to None.
+        callback_manager (Optional[CallbackManager]): Manager for callbacks. Defaults to None.
+        generate_kwargs (Optional[Dict[str, Any]]): Additional keyword arguments for generation. Defaults to None.
+        model_kwargs (Optional[Dict[str, Any]]): Additional keyword arguments for the model. Defaults to None.
+        verbose (bool): Verbosity flag. Defaults to False.
+
+        Raises:
+        ValueError: If the provided model path does not exist.
+
+        Note:
+        This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding.
+        """
+    )
+    assert docstring.short_description == "Initialize the model with provided parameters."
+    assert len(docstring.params) == 12
+    assert docstring.returns is None
+    assert docstring.notes is not None
+    assert docstring.notes[0].description == "This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding."
+
 
 def test_broken_meta() -> None:
     """Test parsing broken meta."""

@@ -8,12 +8,14 @@ from enum import IntEnum
 
 from .common import (
     EXAMPLES_KEYWORDS,
+    NOTES_KEYWORDS,
     PARAM_KEYWORDS,
     RAISES_KEYWORDS,
     RETURNS_KEYWORDS,
     YIELDS_KEYWORDS,
     Docstring,
     DocstringExample,
+    DocstringNote,
     DocstringMeta,
     DocstringParam,
     DocstringRaises,
@@ -56,6 +58,8 @@ DEFAULT_SECTIONS = [
     Section("Attributes", "attribute", SectionType.MULTIPLE),
     Section("Example", "examples", SectionType.SINGULAR),
     Section("Examples", "examples", SectionType.SINGULAR),
+    Section("Notes", "notes", SectionType.SINGULAR),
+    Section("Note", "note", SectionType.SINGULAR),
     Section("Returns", "returns", SectionType.SINGULAR_OR_MULTIPLE),
     Section("Yields", "yields", SectionType.SINGULAR_OR_MULTIPLE),
 ]
@@ -114,6 +118,8 @@ class GoogleParser:
             #TODO: make better comparison for Examples
             if not (section.title == "Example" or section.title== "Examples") and not valid_start_text_for_param:
                 return
+            if not (section.title == "Note" or section.title== "Notes") and not valid_start_text_for_param:
+                return
             return self._build_single_meta(section, text)
 
         if ":" not in text:
@@ -155,6 +161,10 @@ class GoogleParser:
             )
         if section.key in EXAMPLES_KEYWORDS:
             return DocstringExample(
+                args=[section.key], snippet=None, description=desc
+            )
+        if section.key in NOTES_KEYWORDS:
+            return DocstringNote(
                 args=[section.key], snippet=None, description=desc
             )
         if section.key in PARAM_KEYWORDS:
