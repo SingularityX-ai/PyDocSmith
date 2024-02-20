@@ -412,7 +412,7 @@ def test_params() -> None:
 
 
 def test_notes() -> None:
-    """Test parsing params."""
+    """Test parsing params. This test is failing"""
     docstring = parse("Short description")
     assert len(docstring.params) == 0
 
@@ -726,7 +726,7 @@ def test_warns() -> None:
 
 
 def test_simple_sections() -> None:
-    """Test parsing simple sections."""
+    """Test parsing simple sections. This test is failing"""
     docstring = parse(
         """
         Short description
