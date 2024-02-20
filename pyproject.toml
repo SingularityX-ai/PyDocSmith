@@ -54,7 +54,7 @@ include_trailing_comma = true
 jobs = 4
 
 [tool.pylint.format]
-max-line-length = 79
+max-line-length = 110
 
 [tool.pylint.messages_control]
 reports = "no"
@@ -67,4 +67,7 @@ disable = [
     "too-many-statements",
     "too-many-arguments",
     "too-few-public-methods",
+    "invalid-name",
+    "too-many-return-statements",
+    "fixme"
 ]

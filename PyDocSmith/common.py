@@ -10,7 +10,7 @@ PARAM_KEYWORDS = {
     "attribute",
     "key",
     "keyword",
-    "note"
+    "note",
 }
 RAISES_KEYWORDS = {"raises", "raise", "except", "exception"}
 DEPRECATION_KEYWORDS = {"deprecation", "deprecated"}
@@ -149,6 +149,7 @@ class DocstringExample(DocstringMeta):
         self.snippet = snippet
         self.description = description
 
+
 class DocstringNote(DocstringMeta):
     """DocstringNote symbolizing example metadata."""
 
@@ -162,6 +163,7 @@ class DocstringNote(DocstringMeta):
         super().__init__(args, description)
         self.snippet = snippet
         self.description = description
+
 
 class Docstring:
     """Docstring object representation."""
@@ -224,10 +226,8 @@ class Docstring:
         return [
             item for item in self.meta if isinstance(item, DocstringExample)
         ]
-    
+
     @property
     def notes(self) -> T.List[DocstringNote]:
         """Return a list of information on function notes."""
-        return [
-            item for item in self.meta if isinstance(item, DocstringNote)
-        ]
+        return [item for item in self.meta if isinstance(item, DocstringNote)]

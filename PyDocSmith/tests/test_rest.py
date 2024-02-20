@@ -370,13 +370,15 @@ def test_returns() -> None:
         :raises: Any exceptions that may occur during the reset process.
         """
     )
-    assert docstring.short_description == "Reset the counter and acquire a lock if max_rpm is set."
+    assert (
+        docstring.short_description
+        == "Reset the counter and acquire a lock if max_rpm is set."
+    )
     assert docstring.returns is not None
     assert docstring.returns.type_name is None
     assert docstring.returns.description == "self"
     assert not docstring.returns.is_generator
-    assert len(docstring.raises) == 0 #TODO: Fix this test case
-
+    assert len(docstring.raises) == 0  # TODO: Fix this test case
 
 
 def test_yields() -> None:

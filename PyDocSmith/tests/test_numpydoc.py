@@ -410,6 +410,7 @@ def test_params() -> None:
     assert docstring.params[1].type_name == "int"
     assert docstring.params[1].description == "description 2"
 
+
 def test_notes() -> None:
     """Test parsing params."""
     docstring = parse("Short description")
@@ -453,15 +454,24 @@ def test_notes() -> None:
 
         Notes
         ----------
-            This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding.
+            This function initializes the model with the provided
+            parameters and sets up the necessary configurations
+            and resources for token generation and model decoding.
         """
     )
-    assert docstring.short_description == "Initialize the model with provided parameters."
+    assert (
+        docstring.short_description
+        == "Initialize the model with provided parameters."
+    )
     assert len(docstring.params) == 12
     assert docstring.returns is None
     assert docstring.notes is not None
     print(compose(docstring))
-    # assert docstring.notes[0].description == "This function initializes the model with the provided parameters and sets up the necessary configurations and resources for token generation and model decoding."
+    # assert docstring.notes[0].description ==
+    # "This function initializes the model with the provided
+    # parameters and sets up the necessary configurations
+    # and resources for token generation and model decoding."
+
 
 def test_attributes() -> None:
     """Test parsing attributes."""
@@ -746,7 +756,8 @@ def test_simple_sections() -> None:
            pp. 585-588, 1996.
         """
     )
-    docstring = parse("""
+    docstring = parse(
+        """
             Description
             Examples:
             --------
@@ -758,7 +769,8 @@ def test_simple_sections() -> None:
             >>> test2b
             desc2a
             desc2b
-            """)
+            """
+    )
     assert len(docstring.meta) == 4
     assert docstring.meta[0].args == ["see_also"]
     assert docstring.meta[0].description == (
@@ -1147,8 +1159,7 @@ def test_deprecation(
         ),
     ],
 )
-
 def test_compose(source: str, expected: str) -> None:
     """Test compose in default mode."""
     parsed = parse(source)
-    assert compose(parse) == expected
+    assert compose(parsed) == expected

@@ -13,8 +13,8 @@ from .common import (
     Docstring,
     DocstringDeprecated,
     DocstringExample,
-    DocstringNote,
     DocstringMeta,
+    DocstringNote,
     DocstringParam,
     DocstringRaises,
     DocstringReturns,
@@ -262,6 +262,7 @@ class ExamplesSection(Section):
                 snippet="\n".join(snippet_lines) if snippet_lines else None,
                 description="\n".join(description_lines),
             )
+
 
 class NotesSection(Section):
     """Parser for numpydoc notes sections.

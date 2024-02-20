@@ -15,8 +15,8 @@ from .common import (
     YIELDS_KEYWORDS,
     Docstring,
     DocstringExample,
-    DocstringNote,
     DocstringMeta,
+    DocstringNote,
     DocstringParam,
     DocstringRaises,
     DocstringReturns,
@@ -105,27 +105,33 @@ class GoogleParser:
         """
 
         section = self.sections[title]
-        pattern = r'^[\*_a-zA-Z\d]'
+        pattern = r"^[\*_a-zA-Z\d]"
         if text.strip() == "":
-            return
+            return None
 
         if (
             section.type == SectionType.SINGULAR_OR_MULTIPLE
             and not MULTIPLE_PATTERN.match(text)
         ) or section.type == SectionType.SINGULAR:
-            text = re.sub(r'^-\s', '', text)
-            #to validate if the text starts with a valid character in the function signature
+            text = re.sub(r"^-\s", "", text)
+            # to validate if the text starts with
+            # a valid character in the function signature
             valid_start_text_for_param = re.match(pattern, text)
 
-            #TODO: make better comparison for Examples
+            # TODO: make better comparison for Examples
             if not valid_start_text_for_param:
-                ignore_for_these_type = ["Example", "Examples", "Note", "Notes", "Returns", "Yields"]
+                ignore_for_these_type = [
+                    "Example",
+                    "Examples",
+                    "Note",
+                    "Notes",
+                ]
                 if not section.title in ignore_for_these_type:
-                    return
+                    return None
             return self._build_single_meta(section, text)
 
         if ":" not in text:
-            return
+            return None
 
         # Split spec and description
         before, desc = text.split(":", 1)
@@ -135,17 +141,17 @@ class GoogleParser:
                 first_line, rest = desc.split("\n", 1)
                 desc = first_line + "\n" + inspect.cleandoc(rest)
             desc = desc.strip("\n")
-        
-        before = re.sub(r'^-\s', '', before)
-        
+
+        before = re.sub(r"^-\s", "", before)
+
         valid_start_text_for_param = re.match(pattern, before)
         if before and not valid_start_text_for_param:
-            return
-        
-        desc = re.sub(r'^-\s', '', desc)
+            return None
+
+        desc = re.sub(r"^-\s", "", desc)
         valid_start_text_for_param = re.match(pattern, before)
         if desc and not valid_start_text_for_param:
-            return
+            return None
         return self._build_multi_meta(section, before, desc)
 
     @staticmethod
@@ -276,7 +282,7 @@ class GoogleParser:
             # Clear Any Unknown Meta
             # Ref: https://github.com/SigularityX-ai/PyDocSmith/issues/29
             meta_details = meta_chunk[start:end]
-            unknown_meta = re.search(r"\n\S", meta_details)
+            # unknown_meta = re.search(r"\n\S", meta_details)
             # if unknown_meta is not None:
             #     meta_details = meta_details[: unknown_meta.start()]
 
@@ -309,7 +315,7 @@ class GoogleParser:
                 if not c_matches:
                     ret.meta.append(self._build_meta(part, title))
                     continue
-          
+
             if not c_matches:
                 raise ParseError(f'No specification for "{title}": "{chunk}"')
             c_splits = []
@@ -378,12 +384,15 @@ def compose(
                 [head] + one.description.splitlines()
             )
             parts.append(body)
-        elif isinstance(one, DocstringReturns) and one.description and not one.type_name:
+        elif (
+            isinstance(one, DocstringReturns)
+            and one.description
+            and not one.type_name
+        ):
             (first, *rest) = one.description.splitlines()
             if rendering_style == RenderingStyle.COMPACT and first == "None":
                 index_of_returns = parts.index("Returns:")
                 parts.pop(index_of_returns)
-                pass
             else:
                 body = f"\n{indent}{indent}".join([head + first] + rest)
                 parts.append(body)

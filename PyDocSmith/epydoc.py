@@ -12,8 +12,6 @@ from .common import (
     DocstringParam,
     DocstringRaises,
     DocstringReturns,
-    DocstringExample,
-    DocstringNote,
     DocstringStyle,
     ParseError,
     RenderingStyle,

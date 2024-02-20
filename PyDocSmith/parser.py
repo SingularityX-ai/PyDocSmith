@@ -19,6 +19,7 @@ _STYLE_MAP = {
     DocstringStyle.EPYDOC: epydoc,
 }
 
+
 def detect_docstring_style(docstring) -> DocstringStyle:
     """
     Attempt to detect the docstring style based on simple heuristics.
@@ -27,15 +28,20 @@ def detect_docstring_style(docstring) -> DocstringStyle:
         docstring (str): The docstring to analyze.
 
     Returns:
-        str: The detected style ('REST', 'GOOGLE', 'NUMPYDOC', 'EPYDOC', or 'UNKNOWN').
+        str: The detected style ('REST', 'GOOGLE',
+        'NUMPYDOC', 'EPYDOC', or 'UNKNOWN').
     """
     if "@param" in docstring or "@return" in docstring:
         return DocstringStyle.EPYDOC
-    elif ":param:" in docstring or ":return:" in docstring or ":returns:" in docstring:
+    if (
+        ":param:" in docstring
+        or ":return:" in docstring
+        or ":returns:" in docstring
+    ):
         return DocstringStyle.REST
-    elif "Args:" in docstring or "Returns:" in docstring:
+    if "Args:" in docstring or "Returns:" in docstring:
         return DocstringStyle.GOOGLE
-    elif "Parameters" in docstring or "Returns" in docstring:
+    if "Parameters" in docstring or "Returns" in docstring:
         return DocstringStyle.NUMPYDOC
     return None
 
@@ -49,14 +55,14 @@ def parse(text: str, style: DocstringStyle = DocstringStyle.AUTO) -> Docstring:
     """
     if style != DocstringStyle.AUTO:
         return _STYLE_MAP[style].parse(text)
-    
+
     doc_string_style = detect_docstring_style(text)
 
     if doc_string_style is not None:
         try:
             return _STYLE_MAP[doc_string_style].parse(text)
-        except ParseError:
-            raise ParseError(f"Failed to parse docstring with style {doc_string_style}")
+        except ParseError as ex:
+            raise ex
 
     exc: T.Optional[Exception] = None
     rets = []
