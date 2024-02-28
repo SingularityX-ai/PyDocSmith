@@ -326,7 +326,26 @@ class GoogleParser:
                 part = chunk[start:end].strip("\n")
                 ret.meta.append(self._build_meta(part, title))
         ret.meta = [m for m in ret.meta if m]
-        return ret
+        return remove_non_required_exceptions(ret)
+    
+def remove_non_required_exceptions(docstring: Docstring) -> Docstring:
+    """Remove non-required exceptions from the docstring.
+
+    :param docstring: parsed docstring representation
+    :returns: docstring representation with non-required exceptions removed
+    """
+    # docstring.raises = [r for r in docstring.raises if r.type_name != 'Any']
+    # return docstring
+    for idx, itm in enumerate(docstring.meta):
+
+        if isinstance(itm, DocstringRaises):
+            if itm.type_name == "Any":
+                docstring.meta.pop(idx)
+
+       
+    return docstring
+
+
 
 
 def parse(text: str) -> Docstring:

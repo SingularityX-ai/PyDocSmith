@@ -917,6 +917,34 @@ def test_none_returns() -> None:
     assert len(docstring.many_returns) == 0
     print(compose(docstring))
 
+def test_any_exception() -> None:
+    """Test parsing examples."""
+    docstring = parse(
+        """A sample function
+        
+        A function the demonstrates docstrings
+        
+        Args:
+            arg1 (int): The firsty arg
+
+        Exceptions:
+            Any: Any exception that is coming
+
+        Returns:
+            None
+        """
+    )
+    new_docstring = compose(docstring, rendering_style=RenderingStyle.COMPACT)
+    print(new_docstring)
+    docstring = parse(new_docstring)
+    assert docstring is not None
+    assert len(docstring.params) == 1
+    assert len(docstring.raises) == 0
+
+    assert docstring.returns is None
+    assert len(docstring.many_returns) == 0
+    print(compose(docstring))
+
 
 def test_broken_meta() -> None:
     """Test parsing broken meta."""
