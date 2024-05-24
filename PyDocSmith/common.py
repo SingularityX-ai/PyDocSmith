@@ -1,5 +1,6 @@
 """Common methods for parsing."""
 import enum
+import textwrap
 import typing as T
 
 PARAM_KEYWORDS = {
@@ -177,7 +178,7 @@ class Docstring:
         self.long_description = None  # type: T.Optional[str]
         self.blank_after_short_description = False
         self.blank_after_long_description = False
-        self.meta = []  # type: T.List[DocstringMeta]
+        self.meta: T.List[DocstringMeta] = []  # type: T.List[DocstringMeta]
         self.style = style  # type: T.Optional[DocstringStyle]
 
     @property
@@ -231,3 +232,20 @@ class Docstring:
     def notes(self) -> T.List[DocstringNote]:
         """Return a list of information on function notes."""
         return [item for item in self.meta if isinstance(item, DocstringNote)]
+    
+def format_docstring_to_pep257(docstring: Docstring, width: int = 72) -> Docstring:
+    if docstring.short_description:
+        docstring.short_description = textwrap.fill(docstring.short_description.strip(), width)
+    if docstring.long_description:
+        docstring.long_description = textwrap.fill(docstring.long_description.strip(), width)
+
+    for meta in docstring.meta:
+        if meta.description:
+            # Ensure meta descriptions are wrapped according to PEP 8
+            meta.description = textwrap.fill(meta.description.strip(), width)
+        if meta.args:
+            # Clean up args to ensure they are stripped of extra spaces
+            meta.args = [arg.strip() for arg in meta.args if arg.strip()]
+
+    return docstring
+    

@@ -3,7 +3,7 @@
 import typing as T
 
 import pytest
-from PyDocSmith.common import Docstring, ParseError, RenderingStyle
+from PyDocSmith.common import Docstring, ParseError, RenderingStyle, format_docstring_to_pep257
 from PyDocSmith.google import (
     GoogleParser,
     Section,
@@ -982,6 +982,35 @@ def test_unknown_meta() -> None:
     assert docstring.params[1].arg_name == "arg1"
     assert docstring.params[1].description == "desc1"
 
+def test_very_long_content_for_format_docstring_to_pep257() -> None:
+    # currently failing
+    """Test parsing unknown meta. This is failing"""
+    docstring = parse(
+        """A sample function
+
+        A function the demonstrates docstrings with very long content that should be wrapped to the next line. Additionally, the function has a very long description that should be wrapped to the next line.
+
+        Args:
+            arg1 (int): The firsty arg
+            arg2 (str): The second arg
+            arg3 (float, optional): The third arg. Defaults to 1.0.
+            arg4 (Optional[Dict[str, Any]], optional): The last arg. Defaults to None.
+            arg5 (str, optional): The fifth arg. Defaults to DEFAULT_ARG5.
+
+        Returns:
+            The args packed in a mapping
+        """
+    )
+    docstring = format_docstring_to_pep257(docstring)
+    
+    assert docstring.short_description == "A sample function"
+    assert docstring.long_description == 'A function the demonstrates docstrings with very long content that\nshould be wrapped to the next line. Additionally, the function has a\nvery long description that should be wrapped to the next line.'
+
+    assert docstring.params[0].arg_name == "arg1"
+    assert docstring.params[0].description == "The firsty arg"
+    assert docstring.params[1].arg_name == "arg2"
+    assert docstring.params[1].description == "The second arg"
+
 
 def test_unformatted_valid_docstring() -> None:
     """
@@ -1002,6 +1031,7 @@ def test_unformatted_valid_docstring() -> None:
     None
     """
     )
+    composed_docstring = compose(docstring)
     assert (
         docstring.short_description == "Set the RPM controller for the object."
     )
