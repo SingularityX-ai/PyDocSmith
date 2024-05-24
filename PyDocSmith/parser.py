@@ -10,6 +10,7 @@ from PyDocSmith.common import (
     DocstringStyle,
     ParseError,
     RenderingStyle,
+    format_docstring_to_pep257,
 )
 
 _STYLE_MAP = {
@@ -116,6 +117,7 @@ def compose(
     style: DocstringStyle = DocstringStyle.AUTO,
     rendering_style: RenderingStyle = RenderingStyle.COMPACT,
     indent: str = "    ",
+    line_width: int = 72
 ) -> str:
     """Render a parsed docstring into docstring text.
 
@@ -127,6 +129,10 @@ def compose(
     module = _STYLE_MAP[
         docstring.style if style == DocstringStyle.AUTO else style
     ]
+
+    if line_width >= 72:
+        docstring = format_docstring_to_pep257(docstring, width=line_width)
+
     return module.compose(
         docstring, rendering_style=rendering_style, indent=indent
     )
