@@ -1,6 +1,6 @@
 The project is a fork from the original project - https://github.com/rr-/docstring_parser/
 
-I have updated it based on use case for - https://www.snorkell.ai/
+
 
 # PyDocSmith
 
@@ -70,6 +70,8 @@ print(docstring_text)
 2. Google Docstring has been modified to accommodate Notes, Examples
 3. Sometime GoogleDoc string doesn't have proper indentation specially when generated from LLMs like GPT or Mistral. PyDocSmith can fix those bad docstrings.
 4. Additional test-cases were added to accommodate a different style of GoogleDocstring
+
+I have updated it based on use case for - https://www.penify.dev
 
 ## Contributing
 
