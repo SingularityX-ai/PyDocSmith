@@ -242,7 +242,11 @@ def format_docstring_to_pep257(docstring: Docstring, width: int = 72) -> Docstri
     for meta in docstring.meta:
         if meta.description:
             # Ensure meta descriptions are wrapped according to PEP 8
-            meta.description = textwrap.fill(meta.description.strip(), width)
+            split_description = meta.description.split("\n")
+            for itm, idx in enumerate(split_description):
+                split_description[idx] = textwrap.fill(itm.strip(), width)
+
+            meta.description = "\n".join(split_description)
         if meta.args:
             # Clean up args to ensure they are stripped of extra spaces
             meta.args = [arg.strip() for arg in meta.args if arg.strip()]
